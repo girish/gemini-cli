@@ -19,7 +19,9 @@ import {
   GetPromptResultSchema,
   ListPromptsResultSchema,
   ListRootsRequestSchema,
+  LoggingMessageNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import type { LoggingMessageNotification } from '@modelcontextprotocol/sdk/types.js';
 import { parse } from 'shell-quote';
 import type { Config, MCPServerConfig } from '../config/config.js';
 import { AuthProviderType } from '../config/config.js';
@@ -180,6 +182,17 @@ export class McpClient {
     return this.status;
   }
 
+  setNotificationHandler(
+    handler: (notification: LoggingMessageNotification) => void | Promise<void>,
+  ): void {
+    if (this.client) {
+      this.client.setNotificationHandler(
+        LoggingMessageNotificationSchema,
+        handler,
+      );
+    }
+  }
+
   private updateStatus(status: MCPServerStatus): void {
     this.status = status;
     updateMCPServerStatus(this.serverName, status);
@@ -197,6 +210,7 @@ export class McpClient {
     this.assertConnected();
     return discoverTools(
       this.serverName,
+      this,
       this.serverConfig,
       this.client!,
       cliConfig,
@@ -459,6 +473,7 @@ export async function discoverMcpTools(
   debugMode: boolean,
   workspaceContext: WorkspaceContext,
   cliConfig: Config,
+  mcpClientWrapper: McpClient,
 ): Promise<void> {
   mcpDiscoveryState = MCPDiscoveryState.IN_PROGRESS;
   try {
@@ -474,6 +489,7 @@ export async function discoverMcpTools(
           debugMode,
           workspaceContext,
           cliConfig,
+          mcpClientWrapper,
         ),
     );
     await Promise.all(discoveryPromises);
@@ -520,6 +536,7 @@ export async function connectAndDiscover(
   debugMode: boolean,
   workspaceContext: WorkspaceContext,
   cliConfig: Config,
+  mcpClientWrapper: McpClient,
 ): Promise<void> {
   updateMCPServerStatus(mcpServerName, MCPServerStatus.CONNECTING);
 
@@ -545,6 +562,7 @@ export async function connectAndDiscover(
     );
     const tools = await discoverTools(
       mcpServerName,
+      mcpClientWrapper,
       mcpServerConfig,
       mcpClient,
       cliConfig,
@@ -593,6 +611,7 @@ export async function connectAndDiscover(
  */
 export async function discoverTools(
   mcpServerName: string,
+  mcpClientWrapper: McpClient,
   mcpServerConfig: MCPServerConfig,
   mcpClient: Client,
   cliConfig: Config,
@@ -621,6 +640,7 @@ export async function discoverTools(
 
         const tool = new DiscoveredMCPTool(
           mcpCallableTool,
+          mcpClientWrapper,
           mcpServerName,
           funcDecl.name!,
           funcDecl.description ?? '',

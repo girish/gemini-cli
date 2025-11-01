@@ -20,6 +20,7 @@ import { MockTool } from '../test-utils/mock-tool.js';
 
 import { McpClientManager } from './mcp-client-manager.js';
 import { ToolErrorType } from './tool-error.js';
+import type { McpClient } from './mcp-client.js';
 
 vi.mock('node:fs');
 
@@ -202,8 +203,10 @@ describe('ToolRegistry', () => {
       const server1Name = 'mcp-server-uno';
       const server2Name = 'mcp-server-dos';
       const mockCallable = {} as CallableTool;
+      const mcpClient = {} as McpClient;
       const mcpTool1_c = new DiscoveredMCPTool(
         mockCallable,
+        mcpClient,
         server1Name,
         'zebra-tool',
         'd1',
@@ -211,6 +214,7 @@ describe('ToolRegistry', () => {
       );
       const mcpTool1_a = new DiscoveredMCPTool(
         mockCallable,
+        mcpClient,
         server1Name,
         'apple-tool',
         'd2',
@@ -218,6 +222,7 @@ describe('ToolRegistry', () => {
       );
       const mcpTool1_b = new DiscoveredMCPTool(
         mockCallable,
+        mcpClient,
         server1Name,
         'banana-tool',
         'd3',
@@ -226,6 +231,7 @@ describe('ToolRegistry', () => {
 
       const mcpTool2 = new DiscoveredMCPTool(
         mockCallable,
+        mcpClient,
         server2Name,
         'tool-on-server2',
         'd4',

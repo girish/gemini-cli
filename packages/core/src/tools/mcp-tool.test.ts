@@ -19,6 +19,11 @@ import { ToolErrorType } from './tool-error.js';
 const mockCallTool = vi.fn();
 const mockToolMethod = vi.fn();
 
+// Simple mock MCP client that exposes the handler setter used by the
+// implementation under test.
+const mockMcpClient = {
+  setNotificationHandler: vi.fn(),
+} as any;
 const mockCallableToolInstance: Mocked<CallableTool> = {
   tool: mockToolMethod as any, // Not directly used by DiscoveredMCPTool instance methods
   callTool: mockCallTool as any,
@@ -76,6 +81,7 @@ describe('DiscoveredMCPTool', () => {
     mockToolMethod.mockClear();
     tool = new DiscoveredMCPTool(
       mockCallableToolInstance,
+      mockMcpClient,
       serverName,
       serverToolName,
       baseDescription,
@@ -175,6 +181,7 @@ describe('DiscoveredMCPTool', () => {
       async ({ isErrorValue }) => {
         const tool = new DiscoveredMCPTool(
           mockCallableToolInstance,
+          mockMcpClient,
           serverName,
           serverToolName,
           baseDescription,
@@ -220,6 +227,7 @@ describe('DiscoveredMCPTool', () => {
       async ({ isErrorValue }) => {
         const tool = new DiscoveredMCPTool(
           mockCallableToolInstance,
+          mockMcpClient,
           serverName,
           serverToolName,
           baseDescription,
@@ -733,6 +741,7 @@ describe('DiscoveredMCPTool', () => {
     it('should return false if trust is true', async () => {
       const trustedTool = new DiscoveredMCPTool(
         mockCallableToolInstance,
+        mockMcpClient,
         serverName,
         serverToolName,
         baseDescription,
@@ -897,6 +906,7 @@ describe('DiscoveredMCPTool', () => {
     it('should return false if trust is true and folder is trusted', async () => {
       const trustedTool = new DiscoveredMCPTool(
         mockCallableToolInstance,
+        mockMcpClient,
         serverName,
         serverToolName,
         baseDescription,
@@ -914,6 +924,7 @@ describe('DiscoveredMCPTool', () => {
     it('should return confirmation details if trust is true but folder is not trusted', async () => {
       const trustedTool = new DiscoveredMCPTool(
         mockCallableToolInstance,
+        mockMcpClient,
         serverName,
         serverToolName,
         baseDescription,
@@ -933,6 +944,7 @@ describe('DiscoveredMCPTool', () => {
     it('should return confirmation details if trust is false, even if folder is trusted', async () => {
       const untrustedTool = new DiscoveredMCPTool(
         mockCallableToolInstance,
+        mockMcpClient,
         serverName,
         serverToolName,
         baseDescription,

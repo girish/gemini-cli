@@ -99,6 +99,7 @@ import {
   type GenerateContentResponseUsageMetadata,
 } from '@google/genai';
 import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
+import type { McpClient } from '../tools/mcp-client.js';
 import * as uiTelemetry from './uiTelemetry.js';
 import { makeFakeConfig } from '../test-utils/config.js';
 import { ClearcutLogger } from './clearcut-logger/clearcut-logger.js';
@@ -1227,8 +1228,11 @@ describe('loggers', () => {
     });
 
     it('should log a tool call with mcp_server_name for MCP tools', () => {
+      const mockMcpClient = {} as McpClient;
+
       const mockMcpTool = new DiscoveredMCPTool(
         {} as CallableTool,
+        mockMcpClient,
         'mock_mcp_server',
         'mock_mcp_tool',
         'tool description',

@@ -21,6 +21,8 @@ import type { CallableTool, FunctionCall, Part } from '@google/genai';
 import { ToolErrorType } from './tool-error.js';
 import type { Config } from '../config/config.js';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';
+import type { McpClient } from './mcp-client.js';
+import type { LoggingMessageNotification } from '@modelcontextprotocol/sdk/types.js';
 
 type ToolParams = Record<string, unknown>;
 
@@ -66,6 +68,7 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation<
 
   constructor(
     private readonly mcpTool: CallableTool,
+    private readonly mcpClient: McpClient,
     readonly serverName: string,
     readonly serverToolName: string,
     readonly displayName: string,
@@ -136,7 +139,31 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation<
     return false;
   }
 
-  async execute(signal: AbortSignal): Promise<ToolResult> {
+  async execute(
+    signal: AbortSignal,
+    updateOutput?: (output: string) => void,
+  ): Promise<ToolResult> {
+    if (updateOutput) {
+      updateOutput(
+        `######Invoking MCP tool ########'${this.serverToolName}'...`,
+      );
+    }
+
+    // If an MCP client was provided, wire notifications to the updateOutput
+    // callback so the CLI can stream intermediate updates. Track whether we
+    // added a handler so we can clean up afterwards.
+    const notificationHandler = (notification: LoggingMessageNotification) => {
+      const { level, data } = notification.params;
+      if (updateOutput) {
+        updateOutput(
+          `[NOTIFICATION] [${String(level).toUpperCase()}] ${JSON.stringify(data)}`,
+        );
+      }
+    };
+    if (this.mcpClient) {
+      this.mcpClient.setNotificationHandler(notificationHandler);
+    }
+
     const functionCalls: FunctionCall[] = [
       {
         name: this.serverToolName,
@@ -211,6 +238,7 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool<
 > {
   constructor(
     private readonly mcpTool: CallableTool,
+    private readonly mcpClient: McpClient,
     readonly serverName: string,
     readonly serverToolName: string,
     description: string,
@@ -229,7 +257,7 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool<
       Kind.Other,
       parameterSchema,
       true, // isOutputMarkdown
-      false, // canUpdateOutput,
+      true, // canUpdateOutput,
       messageBus,
       extensionName,
       extensionId,
@@ -239,6 +267,7 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool<
   asFullyQualifiedTool(): DiscoveredMCPTool {
     return new DiscoveredMCPTool(
       this.mcpTool,
+      this.mcpClient,
       this.serverName,
       this.serverToolName,
       this.description,
@@ -260,6 +289,7 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool<
   ): ToolInvocation<ToolParams, ToolResult> {
     return new DiscoveredMCPToolInvocation(
       this.mcpTool,
+      this.mcpClient,
       this.serverName,
       this.serverToolName,
       this.displayName,

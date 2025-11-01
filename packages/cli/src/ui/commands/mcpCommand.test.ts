@@ -7,12 +7,14 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { mcpCommand } from './mcpCommand.js';
 import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
+import type {
+  McpClient} from '@google/gemini-cli-core';
 import {
   MCPServerStatus,
   MCPDiscoveryState,
   getMCPServerStatus,
   getMCPDiscoveryState,
-  DiscoveredMCPTool,
+  DiscoveredMCPTool
 } from '@google/gemini-cli-core';
 
 import type { CallableTool } from '@google/genai';
@@ -48,6 +50,7 @@ const createMockMCPTool = (
       callTool: vi.fn(),
       tool: vi.fn(),
     } as unknown as CallableTool,
+    {} as McpClient,
     serverName,
     name,
     description || `Description for ${name}`,

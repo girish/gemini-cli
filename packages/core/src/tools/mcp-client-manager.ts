@@ -236,4 +236,8 @@ export class McpClientManager {
   getDiscoveryState(): MCPDiscoveryState {
     return this.discoveryState;
   }
+
+  getMcpClient(serverName: string): McpClient {
+    return this.clients.get(serverName) as McpClient;
+  }
 }

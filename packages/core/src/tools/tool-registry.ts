@@ -294,6 +294,7 @@ export class ToolRegistry {
         this.config.getDebugMode(),
         this.config.getWorkspaceContext(),
         this.config,
+        this.mcpClientManager.getMcpClient(serverName),
       );
     }
   }
